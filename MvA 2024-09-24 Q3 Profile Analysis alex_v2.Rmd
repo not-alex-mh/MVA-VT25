@@ -1,0 +1,205 @@
+---
+title: "Profile Analysis & MvA Exam 2024-09-24"
+author: "Alexander M. Holmskär"
+# study track: LÉON - LÉON
+date: "2025-03-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(latex2exp)
+```
+
+```{r}
+ex_c <- read.table("ex3_control.txt", header=T)
+ex_e <- read.table("ex3_experimental.txt", header=T)
+```
+
+
+# Profile Analysis Theory
+
+## 1. Are the profiles parallel?
+Assumes normality and homogeneity of covariance matrices.
+$$
+H_{01}: \mu_{1i} - \mu_{1i-1} = \mu_{2i} - \mu_{2i-1}, i = 2,3,\dots,p
+$$
+What does $H_{01}$ this mean? It means that if the arrows are the same length in the picture below, the lines are parallel. Imagine more arrows for every step along the x axis.
+```{r}
+x1 <- c(1, 3, 2, 5)
+x2 <- c(2, 4, 3, 6)
+ggplot()+
+  geom_line(aes(x=1:4, y=x1), colour="navyblue")+
+  geom_line(aes(x=1:4, y=x2), colour="springgreen3")+
+  annotate(geom="text", x=1.1, y=2, label=TeX("$\\mu_{11}$",output = "character"), parse=T)+
+  annotate(geom="text", x=2.1, y=4.1, label=TeX("$\\mu_{12}$",output = "character"), parse=T)+
+  annotate(geom="text", x=1, y=1.2, label=TeX("$\\mu_{21}$",output = "character"), parse=T)+
+  annotate(geom="text", x=2.1, y=3.1, label=TeX("$\\mu_{22}$",output = "character"), parse=T)+
+  annotate(geom="text", x=1.2, y=3, label=TeX("$=\\mu_{12} - \\mu_{11}$",output = "character"), parse=T)+
+  annotate(geom="text", x=2.2, y=2, label=TeX("$=\\mu_{22} - \\mu_{21}$",output = "character"), parse=T)+
+  geom_segment(aes(x = 1, y = 2, xend = 1, yend = 4),
+    arrow = arrow(ends = "both", length=unit(c(.5,.5), "cm")), lwd=.25)+
+  geom_segment(aes(x = 1, y = 4, xend = 2, yend = 4),linetype=2, lwd=.25)+
+  geom_segment(aes(x = 2, y = 1, xend = 2, yend = 3),
+    arrow = arrow(ends = "both", length=unit(c(.5,.5), "cm")), lwd=.25)+
+  geom_segment(aes(x = 1, y = 1, xend = 2, yend = 1),linetype=2, lwd=.25)
+```
+
+Reject $H_{01}: \mathbf{C} \boldsymbol{\mu}_{1} = \mathbf{C} \boldsymbol{\mu}_{2}$ at $\alpha$ if
+$$
+T^{2} = ( \bar{\mathbf{x}}_{1} - \bar{\mathbf{x}}_{2} )^{\top} \mathbf{C}^{\top} \left[ \left( \frac{1}{n_{1}} + \frac{1}{n_{2}}\right) \mathbf{C} \mathbf{S}_{pooled} \mathbf{C} \right]^{-1} \mathbf{C} ( \bar{\mathbf{x}}_{1} - \bar{\mathbf{x}}_{2} ) > c^{2}
+$$
+where
+$$
+c^{2} = \frac{(n_{1} + n_{2} - 2) (p - 1)}{n_{1} + n_{2} - 1} F_{p-1, n_{1}+ n_{2} - p} (\alpha)
+$$
+
+## 2. Are profiles coincident?
+
+Assumes normality, homogeneity of covariance matrices, and that profiles are parallel.
+The research question is, are group means the same? Or more statistically correct,
+$$
+H_{02}: \mathbf{1}^{\top} \boldsymbol{\mu}_{1} = \mathbf{1}^{\top} \boldsymbol{\mu}_{2}.
+$$
+This works since we assume parallel lines. Then, we can simply sum the mean difference between groups.
+
+$$
+T^{2} = \mathbf{1}^{\top} (\bar{\mathbf{x}}_{1} - \bar{\mathbf{x}}_{2}) \left[ \left( \frac{1}{n_{1}} + \frac{1}{n_{2}}  \right) \mathbf{1}^{\top} \mathbf{S}_{pooled} \mathbf{1}  \right] ^{-1} \mathbf{1}^{\top} (\bar{\mathbf{x}}_{1} - \bar{\mathbf{x}}_{2}) =
+\left( \frac{\mathbf{1}^{\top} (\bar{\mathbf{x}}_{1} - \bar{\mathbf{x}}_{2})} {\sqrt{\left( \frac{1}{n_{1}} + \frac{1}{n_{2}} \right)} \mathbf{1}^{\top}S_{pooled} \mathbf{1} }\right)^{2} > 
+t^{2}_{n_{1}+n_{2}-2} \left(\frac{\alpha}{2} \right) = 
+F_{1, n_{1}+n_{2}-2}(\alpha)
+$$
+
+## 3. Are profiles level?
+
+Assumes normality, homogeneity of covariance matrice, that profiles are parallel, and that group means are the same.
+$$
+H_{03}: \mu_{11} = \mu_{12} = \dots = \mu_{1p} = \mu_{21} = \mu_{22} = \dots = \mu_{2p}
+$$
+Alternatively, we can write
+$$
+H_{03}: \mathbf{C} \boldsymbol{\mu} = \mathbf{0}
+$$
+where $\mathbf{C}$ is the same contrast matrix as in the first step. We use the test statitic
+$$
+(n_{1}+n_{2})+ \bar{\mathbf{x}}^{\top} \mathbf{C}^{\top} [\mathbf{CSC}^{\top}]^{-1} \mathbf{C} \bar{\mathbf{x}}
+> c^{2} = \frac{(n_{1}+n_{2}-1) (p-1)}{(n1+n2-p+1)} F_{p-1, (n1+n2-p+1} (\alpha).
+$$
+IMPORTANT: Note that we use S, the sample variance for all groups combined. Since we know that groups don't differ, we can use their combined covariance matrix.
+The point is basically, do all dependent variables have the same mean or is there at least one variable mean that is different?
+
+
+# Exercise 3 
+## a) Check equality of mean vectors using Hotelling's $T^{2}$ 
+
+Check normality and homogeneity of covariance matrices.
+Compute Hotelling's $T^{2}$ based on the formula on the formula sheet.
+```{r}
+xbar_c <- matrix(colMeans(ex_c)) # R will automaticall fill it in column-wise
+xbar_e <- matrix(colMeans(ex_e))
+
+n1 <- nrow(ex_c)
+n2 <- nrow(ex_e)
+p <- ncol(ex_e)
+
+# Test homogeneity of covariances
+ex_all <- rbind(ex_c, ex_e)
+ex_all$group <- c(rep(x=0, times=n1), rep(x=1, times=n2))
+heplots::boxM(cbind(Problem1, Problem2, Problem3, Problem4) ~ as.factor(group), data=ex_all)
+biotools::boxM(data=ex_all[1:4], group=ex_all[,5])
+MVN::mvn(ex_c)
+MVN::mvn(ex_e)
+```
+
+```{r}
+s1 <- cov(ex_c)
+s2 <- cov(ex_e)
+S_pooled <- 1/(n1+n2-2) * ((n1-1)*s1 + (n2-1)*s2)
+x_dif <- xbar_c - xbar_e
+T2 <- n1*n2 / (n1+n2) * t(x_dif) %*% solve(S_pooled) %*% x_dif
+T2
+
+f_df1 <- p
+f_df2 <- n1+n2-p-1
+crit_val <- (n1+n2-2)*p / (n1+n2-p-1) * qf(p=0.05, df1=f_df1, df2=f_df2, lower=F)
+crit_val
+```
+We have homogenous covariance matrices, but we cannot reject the null hypothesis that the mean vectors are the same.
+
+```{r}
+DescTools::HotellingsT2Test(x=ex_c, y=ex_e)
+test <- Hotelling::hotelling.test(x=ex_c, y=ex_e)
+test
+```
+
+
+## b) Plot sample profiles
+
+```{r}
+ggplot()+
+  geom_line(aes(x=1:4,y=xbar_c), colour="red")+
+  geom_line(aes(x=1:4,y=xbar_e), colour="blue")
+```
+
+## c) Profile analyse
+
+### i) Parallel profiles
+
+Assumtions: Homogenous covariance matrices. Normality if sample sizes are small.
+$$
+H_{01}: \mu_{12} - \mu_{11} = \mu_{22} - \mu_{21} = \mu_{13} - \mu_{12} = \mu_{23} - \mu_{22} = \mu_{14} - \mu_{13} = \mu_{24} - \mu_{23}
+$$
+
+To check for parallel lines:
+```{r}
+xbar_c <- matrix(colMeans(ex_c)) # R will automaticall fill it in column-wise
+xbar_e <- matrix(colMeans(ex_e))
+C <- matrix(c(-1, 1, 0, 0,
+            0, -1, 1, 0,
+            0, 0, -1, 1), ncol=4)
+n1 <- nrow(ex_c)
+n2 <- nrow(ex_e)
+p <- ncol(ex_e)
+
+s1 <- cov(ex_c)
+s2 <- cov(ex_e)
+S_pooled <- 1/(n1+n2-2) * ((n1-1)*s1 + (n2-1)*s2)
+
+# This is ugly
+# T2 <- t(xbar_c - xbar_e) %*% t(C) %*% solve((1/n1 + 1/n2) * C %*% S_pooled %*% t(C)) %*% C %*% (xbar_c - xbar_e)
+# So I made this instead
+x_dif <- xbar_c - xbar_e
+CSC <- C %*% S_pooled %*% t(C)
+T2 <- t(x_dif) %*% t(C) %*% solve((1/n1 + 1/n2) * CSC) %*% C %*% x_dif
+T2
+
+f_df1 <- p-1
+f_df2 <- n1+n2-p
+crit_val <- (n1 + n2 - 2)*(p - 1) / (n1 + n2 - p) * qf(p=0.05, df1=f_df1, df2=f_df2, lower=FALSE)
+crit_val
+```
+We cannot reject the null that the profile lines are parellel. If lines are parallel we can move on to the next step.
+
+### ii) Coincident lines
+
+$$
+H_{02}: \mathbf{1}^{\top} \boldsymbol{\mu}_{1} = \mathbf{1}^{\top} \boldsymbol{\mu}_{2}.
+$$
+Essentailly, are the lines on top of each other (or close enough)?
+```{r}
+ONE <- matrix(c(1, 1, 1, 1))
+T2 <- t(ONE) %*% x_dif %*% solve ((1/n1 + 1/n2) * t(ONE) %*% S_pooled %*% ONE) %*% t(ONE) %*% x_dif
+T2
+
+f_df1 <- 1
+f_df2 <- n1+n2-2
+crit_val <- qf(p=0.05, df1=f_df1, df2=f_df2, lower.tail=F)
+crit_val
+```
+We reject the null hypothesis that the profiles coincide. We cannot move on to step 3.
+
+## d) 
+Not that similar. With Hotelling's $T^{2}$ we test whether two ellipsoids are significantly different, i.e. are non-overlapping enough to be different. Given the variance of all variables I think that we miss the specific differences that we find using profile analysis. However, both tests are multivariate in nature.
+We get different results because we combine means in step 2. coincident means given parallel profiles. Intuitively, I feel like Hotelling's $T^{2}$ should be significant if plots are not coincident. But then, Hotelling's $T^{2}$ checks for multivariate differences, whereas the coincident profile test combines the means. 
+Lastly, profile analysis tests for trends, which Hotelling's $T^{2}$ does not.
