@@ -106,7 +106,7 @@ plot(t5.1$V1, t5.1$V3)
 plot(t5.1$V2, t5.1$V3)
 # library(MVN)
 
-# Some absolute asshole decided to add check marks in the mvn() function
+# Someone decided to add check marks in the mvn() function
 # Now it won't knit and I am too tired to debug.
 #mvn(t5.1, mvn_test = "mardia")
 ```
